@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Car Value Analysis: Team 139 (AutoIntelliSphere) - CSE6242</title>
+  <link rel="stylesheet" href="https://pyscript.net/releases/2022.12.1/pyscript.css" />
+  <script defer src="https://pyscript.net/releases/2022.12.1/pyscript.js"></script>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+
+  <style>
+    .main-header {
+        background-color: #007BFF;
+        color: #fff;
+        padding: 10px 20px; 
+        text-align: center; 
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .logo img {
+        width: 100px; 
+        height: auto; 
+    }
+
+    .title {
+        font-size: 24px; 
+        margin-top: 0;
+        text-align: right;
+    }
+
+    body {
+      font-family:  Verdana, Geneva, Tahoma, sans-serif, Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      font-family:  Verdana, Geneva, Tahoma, sans-serif, Arial, sans-serif;
+    }
+
+    .result {
+      justify-content: space-between;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .form-container {
+      flex: 1;
+      padding: 20px;
+      background-color: #f2f1ef;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 20%;
+    }
+
+    .form-container label {
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .form-container input[type="range"],
+    .form-container select {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    .form-container .range-value {
+      text-align: left;
+    }
+
+    .form-container .button-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .form-container button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .form-container button:hover {
+      background-color: #0056b3;
+    }
+
+    .result-container {
+      flex: 1;
+      padding: 20px;
+      background-color: #f2f1ef;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .toggle-container {
+    display: flex;
+    align-items: center;
+    }
+
+    .toggle-container input[type="radio"] {
+        display: none;
+    }
+
+    .toggle-container label {
+        cursor: pointer;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin: 5px;
+    }
+
+    input[type="radio"]:checked + label {
+        background-color: #007BFF; 
+        color: white;
+    }
+
+    .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 5px;
+            font-size: 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="main-header">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='gt-logo.png') }}" alt="GT Logo">
+    </div>
+    <h1 class="title">AutoPrice Insight: Predictive Analysis and Offer Comparison</h1>
+</header>
+  <div class="container">
+      <div class="form-container">
+        <h2>Car Features</h2>
+        <form action="{{ url_for('predict')}}" method="post" id="FormMain" name="FormMain">
+
+          <label for="msrp">MSRP</label>
+          <input type="range" min="15000" max="60000" value={{ selected_value_msrp }} class="slider" id="msrp" name="MSRP">
+          <span class="range-value" id="msrp-label">{% if selected_value_msrp %}{{ "${:,.0f}".format(selected_value_msrp | int) }}{% else %}$30,000{% endif %}</span>
+          <script>
+            var msrpRange = document.getElementById("msrp");
+            var msrpOutput = document.getElementById("msrp-label");
+            msrpRange.oninput = function() {
+              msrpOutput.textContent = msrpRange.value;
+            };
+          </script>
+          <br>
+          <br>
+
+          <label for="days_on_lot">Days For Sale</label>
+          <input type="range" min="0" max="365" value={{ selected_value_days }} class="slider" id="days" step="1" name="Days">
+          <span class="range-value" id="days-label">{% if selected_value_days %}{{ selected_value_days }}{% else %}182{% endif %}</span>
+          <script>
+            var daysRange = document.getElementById("days");
+            var daysOutput = document.getElementById("days-label");
+            daysRange.oninput = function() {
+                daysOutput.textContent = daysRange.value;
+            };
+          </script>
+          <br>
+          <br>
+
+          <label for="engine_displacement">Engine Displacement (CC)</label>
+          <input type="range" min="1000" max="7000" value={{ selected_value_engine }} class="slider" id="engine" step="100" name="Engine">
+          <span class="range-value" id="engine-label">{% if selected_value_engine %}{{ "{:,.0f}".format(selected_value_engine | int) }}{% else %}4,000{% endif %}</span>
+          <script>
+            var engineRange = document.getElementById("engine");
+            var engineOutput = document.getElementById("engine-label");
+            engineRange.oninput = function() {
+                engineOutput.textContent = engineRange.value;
+            };
+          </script>
+          <br>
+          <br>
+
+          <label for="isNew" class="main-label">Condition</label>
+            <select id="new" name="New">
+              <option value="New" {% if selected_value_new == "New" %} selected="selected" {% endif %}>New</option>
+              <option value="Used"{% if selected_value_new == "Used" %} selected="selected" {% endif %}>Used</option>
+            </select>
+          <br>
+          <br>
+      
+          <label for="year">Year</label>
+          <input type="range" min="2000" max="2024" value={{ selected_value_year }} class="slider" id="year" step="1" name="Year">
+          <span class="range-value" id="year-label">{% if selected_value_year %}{{ selected_value_year }}{% else %}2012{% endif %}</span>
+          <script>
+            var yearRange = document.getElementById("year");
+            var yearOutput = document.getElementById("year-label");
+            yearRange.oninput = function() {
+                yearOutput.textContent = yearRange.value;
+            };
+          </script>
+          <br>
+          <br>
+
+          <label for="mileage">Mileage</label>
+          <input type="range" min="0" max="150000" value={{ selected_value_mileage }} class="slider" id="mileage" name="Mileage">
+          <span class="range-value" id="mileage-label">{% if selected_value_mileage %}{{ "{:,.0f}".format(selected_value_mileage | int) }}{% else %}75,000{% endif %}</span>
+          <script>
+            var mileageRange = document.getElementById("mileage");
+            var mileageOutput = document.getElementById("mileage-label");
+            mileageRange.oninput = function() {
+              mileageOutput.textContent = mileageRange.value;
+            };
+          </script>
+          <br>
+          <br>
+
+          <label for="make">Make:</label>
+          <select id="make" name="Make">
+              {% for make in make_options %}
+              <option value="{{ make }}" {% if selected_value_make == make %}selected="selected"{% endif %}>{{ make }}</option>
+              {% endfor %}
+          </select>
+          <br>
+          <br>
+        </div>
+        <div class="form-container">
+          <h2>Offer Details</h2>
+
+            <label for="offer-price">Offer Price</label>
+            <input type="range" min="0" max="60000" value= {{ selected_value_offer }} class="slider" id="offer-price" name="Offer Price">
+            <span class="range-value" for="offer-price" id="offer-price-label">{% if selected_value_offer %}{{ "${:,.0f}".format(selected_value_offer | int) }}{% else %}$30,000{% endif %}</span>
+            <script>
+              var offerRange = document.getElementById("offer-price");
+              var offerOutput = document.getElementById("offer-price-label");
+          
+              offerRange.oninput = function() {
+                offerOutput.textContent = offerRange.value;
+              };
+            </script>
+            <br>
+            <br>
+
+            <label for="offerStrat" class="main-label">Offer Analysis Strategy</label>
+              <select id="offerStrat" name="Offer Strategy">
+                <option value="Agressive" {% if selected_value_strategy == "Agressive" %} selected="selected" {% endif %}>Agressive</option>
+                <option value="Moderate" {% if selected_value_strategy == "Moderate" %} selected="selected" {% endif %}>Moderate</option>
+                <option value="Conservative"{% if selected_value_strategy == "Conservative" %} selected="selected" {% endif %}>Conservative</option>
+            </select>
+            <br>
+            <br>
+
+            <label for="buy_sell" class="main-label">Buying or Selling?</label>
+            <select id="buy_sell" name="Buy Sell">
+              <option value="Buy" {% if selected_value_buysell == "Buy" %} selected="selected" {% endif %}>Buy</option>
+              <option value="Sell"{% if selected_value_buysell == "Sell" %} selected="selected" {% endif %}>Sell</option>
+            </select>
+
+            <input type="hidden" name="hidden_data" value="MSRPChart" id="hidden_data">
+            
+            <div class="button-container">
+              <button type="submit" id="btn_submit">Click to Analyze Price</button>
+            </div>
+          </div>
+      </form>
+
+    <div class="result-container">      
+      <div style="margin: auto; width: 50%;">
+        <h2>Offer Details</h2>
+        {{ prediction_text | safe}}
+      </div>
+      <div id="chart"></div>
+      <div class="toggle-container">
+        <h4>Select X-Axis Variable: </h4>
+        <input type="radio" id="value1" name="toggle" value="MSRPChart" {% if x_axis == "MSRPChart" %} checked="checked" {% endif %}>
+        <label for="value1">MSRP</label>
+        <input type="radio" id="value2" name="toggle" value="DaysChart" {% if x_axis == "DaysChart" %} checked="checked" {% endif %}>
+        <label for="value2">Days for Sale</label>
+        <input type="radio" id="value3" name="toggle" value="EngineChart" {% if x_axis == "EngineChart" %} checked="checked" {% endif %}>
+        <label for="value3">Engine Displacement</label>
+        <input type="radio" id="value4" name="toggle" value="YearChart" {% if x_axis == "YearChart" %} checked="checked" {% endif %}>
+        <label for="value4">Year</label>
+        <input type="radio" id="value5" name="toggle" value="MileageChart" {% if x_axis == "MileageChart" %} checked="checked" {% endif %}>
+        <label for="value5">Mileage</label>
+      </div>
+      </form>
+    </div>
+
+    <script>
+      function createChart(x, mid, upper, lower, x_value, predicted_value, offer_value, x_axis) {
+          d3.select('#chart').selectAll('*').remove();  // Clear existing chart
+
+          var margin = { top: 20, right: 30, bottom: 60, left: 75 },
+              width = 1200 - margin.left - margin.right,
+              height = 600 - margin.top - margin.bottom;
+
+          var svg = d3.select('#chart')
+              .append('svg')
+              .attr('width', width + margin.left + margin.right)
+              .attr('height', height + margin.top + margin.bottom)
+              .append('g')
+              .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+          var xScale = d3.scaleLinear()
+            .domain([d3.min(x), d3.max(x)])
+            .range([0, width]);
+
+          var yScale = d3.scaleLinear()
+              .domain([d3.min(lower.concat([offer_value])), d3.max(upper.concat([offer_value]))])
+              .range([height, 0]);
+
+          var line = d3.line()
+              .x(function(d, i) { return xScale(x[i]); })
+              .y(function(d) { return yScale(d); });
+
+          var area = d3.area()
+              .x(function(d, i) { return xScale(x[i]); })
+              .y0(function(d) { return yScale(d.lower); })
+              .y1(function(d) { return yScale(d.upper); });
+
+          // Combine upper and lower arrays into a single array for the area
+          var areaData = upper.map(function(d, i) {
+                return { upper: d, lower: lower[i] };
+          });
+
+          // Add shaded area between upper and lower lines
+          svg.append('path')
+              .datum(areaData)
+              .attr('fill', 'rgba(0, 0, 255, 0.3)') 
+              .attr('stroke', 'none')
+              .attr('d', area)
+              .on('mouseover', handleMouseOver)
+              .on('mousemove', handleMouseMove)
+              .on('mouseout', handleMouseOut);
+          // Lines
+          svg.append('path')
+              .datum(mid)
+              .attr('fill', 'none')
+              .attr('stroke', 'red')
+              .attr('stroke-width', 2)
+              .attr('d', line)
+              .on('mouseover', handleMouseOver)
+              .on('mousemove', handleMouseMove)
+              .on('mouseout', handleMouseOut);
+          svg.append('path')
+              .datum(upper)
+              .attr('fill', 'none')
+              .attr('stroke', 'blue')
+              .attr('stroke-width', 2)
+              .attr('d', line);
+          svg.append('path')
+              .datum(lower)
+              .attr('fill', 'none')
+              .attr('stroke', 'blue')  
+              .attr('stroke-width', 2)
+              .attr('d', line);
+          
+          // Determine X axis
+          var xLabel;
+          if (x_axis === "MSRPChart") {
+              svg.append('g')
+                      .attr('transform', 'translate(0,' + height + ')')
+                      .call(d3.axisBottom(xScale).tickFormat(d3.format('$,.0f')));
+              xLabel = "MSRP";
+          } else if (x_axis === "DaysChart"){
+            svg.append('g')
+                .attr('transform', 'translate(0,' + height + ')')
+                .call(d3.axisBottom(xScale).tickFormat(d3.format('.0f')));
+            xLabel = "Days For Sale";
+          } else if (x_axis === "EngineChart"){
+            svg.append('g')
+                .attr('transform', 'translate(0,' + height + ')')
+                .call(d3.axisBottom(xScale).tickFormat(d3.format('.0f')));
+            xLabel = "Engine Displacement (CC)";
+          } else if (x_axis === "YearChart"){
+              svg.append('g')
+                  .attr('transform', 'translate(0,' + height + ')')
+                  .call(d3.axisBottom(xScale).tickFormat(d3.format('.0f')));
+              xLabel = "Year";
+          } else {
+              svg.append('g')
+                  .attr('transform', 'translate(0,' + height + ')')
+                  .call(d3.axisBottom(xScale));
+              xLabel = "Mileage";
+          }
+
+          // Add x axis label
+          svg.append('text')
+              .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + margin.top + 30) + ')')
+              .style('text-anchor', 'middle')
+              .text(xLabel);
+
+          // Add y axis with formatting
+          svg.append('g')
+            .call(d3.axisLeft(yScale).tickFormat(d3.format('$,.0f')));
+              // Add y axis label
+          svg.append('text')
+              .attr('transform', 'rotate(-90)')
+              .attr('y', 0 - margin.left)
+              .attr('x', 0 - height / 2)
+              .attr('dy', '1em')
+              .style('text-anchor', 'middle')
+              .text('Price');
+
+          // Add predicted value point
+          var predictedCircle = svg.append('circle')
+              .attr('cx', xScale(x_value))
+              .attr('cy', yScale(predicted_value))
+              .attr('r', 5)
+              .attr('fill', 'red')
+              .attr('stroke', 'black')
+              .on('mouseover', handlePredictedMouseOver)
+              .on('mouseout', handlePredictedMouseOut);
+          // Add offer value point
+          var offerCircle = svg.append('circle')
+              .attr('cx', xScale(x_value))
+              .attr('cy', yScale(offer_value))
+              .attr('r', 5)
+              .attr('fill', 'orange')
+              .attr('stroke', 'black')
+              .on('mouseover', handleOfferMouseOver)
+              .on('mouseout', handleOfferMouseOut);
+
+          // Tooltip
+          var tooltip = d3.select('body').append('div')
+                .attr('class', 'tooltip')
+                .style('opacity', 0);
+
+          // Mouseovers
+          function handlePredictedMouseOver(event) {
+                var formattedPredictedYValue = d3.format('$,.0f')(predicted_value);
+
+                tooltip.transition()
+                    .duration(200)
+                    .style('opacity', .9);
+
+                tooltip.html('Predicted Value: ' + formattedPredictedYValue)
+                    .style('left', (event.pageX + 5) + 'px')
+                    .style('top', (event.pageY - 28) + 'px');
+
+                // Make the circle bigger on hover
+                predictedCircle.transition().duration(100)
+                    .attr('r', 8);
+          }
+
+          function handleOfferMouseOver(event) {
+              var formattedOfferYValue = d3.format('$,.0f')(offer_value);
+
+              tooltip.transition()
+                  .duration(200)
+                  .style('opacity', .9);
+
+              tooltip.html('Offer Value: ' + formattedOfferYValue)
+                  .style('left', (event.pageX + 5) + 'px')
+                  .style('top', (event.pageY - 28) + 'px');
+
+              // Make the circle bigger on hover
+              offerCircle.transition().duration(100)
+                  .attr('r', 8);
+          }
+
+          function handlePredictedMouseOut() {
+                // Revert the circle to its normal size on mouseout
+                predictedCircle.transition().duration(100)
+                    .attr('r', 5);
+
+                // Hide the tooltip on mouseout
+                tooltip.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            }
+
+          function handleOfferMouseOut() {
+                // Revert the circle to its normal size on mouseout
+                offerCircle.transition().duration(100)
+                    .attr('r', 5);
+
+                // Hide the tooltip on mouseout
+                tooltip.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            }
+
+          // Add legend
+          var legendBackground = svg.append('rect')
+                .attr('x', 950)
+                .attr('y', 435)
+                .attr('width', 140)
+                .attr('height', 80)
+                .attr('fill', '#f2f1ef')
+                .style('filter', 'drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.1))');
+          var legend = svg.append('g')
+              .attr('transform', 'translate(1050, 445)')
+              .attr('font-family', 'sans-serif')
+              .attr('font-size', 10);
+          legend.append('text')
+              .attr('y', 0)
+              .attr('x', 0)
+              .attr('dy', '0.32em')
+              .attr('text-anchor', 'end')
+              .text('Predicted Mean');
+          legend.append('line')
+              .attr('x1', 5)
+              .attr('y1', 0)
+              .attr('x2', 15)
+              .attr('y2', 0)
+              .attr('stroke', 'red')
+              .attr('stroke-width', 2);
+          legend.append('text')
+              .attr('y', 20)
+              .attr('x', 0)
+              .attr('dy', '0.32em')
+              .attr('text-anchor', 'end')
+              .text('Prediction Interval');
+          legend.append('line')
+              .attr('x1', 5)
+              .attr('y1', 20)
+              .attr('x2', 15)
+              .attr('y2', 20)
+              .attr('stroke', 'blue')
+              .attr('stroke-width', 2);
+          legend.append('text')
+              .attr('y', 40)
+              .attr('x', 0)
+              .attr('dy', '0.32em')
+              .attr('text-anchor', 'end')
+              .text('Predicted Price');
+          legend.append('circle')
+              .attr('cx', 10)
+              .attr('cy', 40)
+              .attr('r', 5)
+              .attr('fill', 'red')
+              .attr('stroke', 'black');
+          legend.append('text')
+              .attr('y', 60)
+              .attr('x', 0)
+              .attr('dy', '0.32em')
+              .attr('text-anchor', 'end')
+              .text('Offer Price');
+          legend.append('circle')
+              .attr('cx', 10)
+              .attr('cy', 60)
+              .attr('r', 5)
+              .attr('fill', 'orange')
+              .attr('stroke', 'black');
+        
+          // Tooltip
+          var tooltip = d3.select('body').append('div')
+                .attr('class', 'tooltip')
+                .style('opacity', 0);
+
+          function handleMouseOver(event, d) {
+            // tooltip transition
+            tooltip.transition()
+                .duration(50)
+                .style('opacity', .9);
+
+            // Vals need for tooltip
+            var xPos = d3.pointer(event)[0];
+            var xValue = xScale.invert(xPos);
+            var bisect = d3.bisector(function(d) { return d; }).left;
+            var index = bisect(x, xValue);
+
+            // Formatting
+            var dollarformatValue = d3.format('$,.0f');
+            var formatValue = d3.format(',.0f');
+            var upperValue = dollarformatValue(upper[index].toFixed(0));
+            var midValue = dollarformatValue(mid[index].toFixed(0));
+            var lowerValue = dollarformatValue(lower[index].toFixed(0));
+
+            // Mouseover by different X axes
+            if (x_axis === "MSRPChart") {
+              var xValue = dollarformatValue(xScale.invert(d3.pointer(event)[0]).toFixed(0));
+              tooltip.html('MSRP: ' + xValue +
+                    '<br>Upper Bound: ' + upperValue +
+                    '<br>Prediction: ' + midValue +
+                    '<br>Lower Bound: ' + lowerValue)
+            .style('left', (event.pageX + 5) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+            } else if (x_axis === "DaysChart"){
+              var xValue = xScale.invert(d3.pointer(event)[0]).toFixed(0);
+              tooltip.html('Days for Sale: ' + xValue +
+                    '<br>Upper Bound: ' + upperValue +
+                    '<br>Prediction: ' + midValue +
+                    '<br>Lower Bound: ' + lowerValue)
+            .style('left', (event.pageX + 5) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+            } else if (x_axis === "EngineChart"){
+              var xValue = formatValue(xScale.invert(d3.pointer(event)[0]).toFixed(0));
+              tooltip.html('Engine Displacement: ' + xValue +
+                    '<br>Upper Bound: ' + upperValue +
+                    '<br>Prediction: ' + midValue +
+                    '<br>Lower Bound: ' + lowerValue)
+            .style('left', (event.pageX + 5) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+            } else if (x_axis === "YearChart"){
+              var xValue = xScale.invert(d3.pointer(event)[0]).toFixed(0);
+              tooltip.html('Year: ' + xValue +
+                    '<br>Upper Bound: ' + upperValue +
+                    '<br>Prediction: ' + midValue +
+                    '<br>Lower Bound: ' + lowerValue)
+            .style('left', (event.pageX + 5) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+            } else {
+              var xValue = formatValue(xScale.invert(d3.pointer(event)[0]).toFixed(0));
+              tooltip.html('Mileage: ' + xValue +
+                    '<br>Upper Bound: ' + upperValue +
+                    '<br>Prediction: ' + midValue +
+                    '<br>Lower Bound: ' + lowerValue)
+            .style('left', (event.pageX + 5) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+            }
+          }
+          // Mousemove
+          function handleMouseMove(event) {
+                // Triggered on mouse move within the shaded area
+                handleMouseOver(event);
+            }
+          // Mouseout
+          function handleMouseOut() {
+              tooltip.transition()
+                  .duration(50)
+                  .style('opacity', 0);
+          }
+          
+      }
+
+      createChart({{ x|tojson|safe }}, {{ mid|tojson|safe }}, 
+      {{ upper|tojson|safe }}, {{ lower|tojson|safe }},
+      {{ x_value|tojson|safe }},{{ predicted_value|tojson|safe }},{{ offer_value|tojson|safe }},
+      {{ x_axis|tojson|safe }});
+
+      document.getElementById('updateGraph').addEventListener('click', function () {
+          // You can make an AJAX request to update the data dynamically from the server.
+          fetch('/update_graph', {
+              method: 'POST',
+          })
+          .then(response => response.json())
+          .then(data => {
+              createChart(data.x, data.mid, data.upper, data.lower, 
+              data.x_value, data.predicted_value, data.offer_value,
+              data.x_axis);
+          });
+      });
+  </script>
+
+    <script>
+        // Sliders and valuesconst
+        const msrpSlider = document.getElementById("msrp");
+        const msrpLabel = document.getElementById("msrp-label");
+        const daysSlider = document.getElementById("days");
+        const daysLabel = document.getElementById("days-label");
+        const engineSlider = document.getElementById("engine");
+        const engineLabel = document.getElementById("engine-label");
+        const yearSlider = document.getElementById("year");
+        const yearLabel = document.getElementById("year-label");
+        const mileageSlider = document.getElementById("mileage");
+        const mileageLabel = document.getElementById("mileage-label");
+        const offerPriceSlider = document.getElementById("offer-price");
+        const offerPriceLabel = document.getElementById("offer-price-label");
+
+        // Text formatting
+        function formatNumberWithCommas(number) {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Update the label text when the slider value changes
+        msrpSlider.addEventListener("input", function () {
+        const formattedValue = formatNumberWithCommas(msrpSlider.value);
+        msrpLabel.textContent = "$"+formattedValue;
+        });
+        daysSlider.addEventListener("input", function () {
+        const formattedValue = formatNumberWithCommas(daysSlider.value);
+        daysLabel.textContent = formattedValue;
+        });
+        engineSlider.addEventListener("input", function () {
+        const formattedValue = formatNumberWithCommas(engineSlider.value);
+        engineLabel.textContent = formattedValue;
+        });
+        yearSlider.addEventListener("input", function () {
+        yearLabel.textContent = yearSlider.value;
+        });
+        mileageSlider.addEventListener("input", function () {
+        const formattedValue = formatNumberWithCommas(mileageSlider.value);
+        mileageLabel.textContent = formattedValue;
+        });
+        offerPriceSlider.addEventListener("input", function () {
+        const formattedValue = formatNumberWithCommas(offerPriceSlider.value);
+        offerPriceLabel.textContent = "$"+formattedValue;
+        });
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('FormMain');
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+    
+        function handleToggleSelection(event) {
+            const selectedValue = event.target.value;
+            document.getElementById("hidden_data").value = selectedValue;
+            form.submit();
+        }
+    
+        radioButtons.forEach(radioButton => {
+            radioButton.addEventListener('change', handleToggleSelection);
+        });
+      });
+    </script>
+  </div>
+</body>
+
+</html>
