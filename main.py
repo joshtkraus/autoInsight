@@ -390,4 +390,4 @@ def results():
     return jsonify(predicted_value)
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1',port=3000, debug=True)
+    app.run(debug=True, port=os.getenv("PORT", default=5000))
