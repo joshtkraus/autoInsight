@@ -81,8 +81,8 @@ cols = ['msrp',
 
 # Prediction Values
 # vals
-msrp = [30000]
-days_on_lot = [182]
+msrp = [47500]
+days_on_lot = [183]
 mileage = [75000]
 vf_DisplacementCC = [4000]
 vf_ModelYear = [2021]
@@ -109,11 +109,11 @@ predicted_value = round(loaded_model.predict(pred_vals)[0])
 
 # Initialize Graph
 # point prediction
-x_value = 30000
+x_value = 47500
 # x axis values
-x = list(range(15000,60000,1000))
+x = list(range(15000,80000,1000))
 mid = []
-for msrp in range(15000,60000,1000):
+for msrp in range(15000,80000,1000):
     vals['msrp'] = [msrp]
     df = pd.DataFrame.from_dict(vals)
     # Predict
@@ -130,10 +130,10 @@ mid=signal.savgol_filter(mid, 10, 1).tolist()
 upper=signal.savgol_filter(upper, 10, 1,).tolist()
 lower=signal.savgol_filter(lower, 10, 1).tolist()
 # offer 
-offer_value=30000
+offer_value=40000
 # get pct change for final string
 pct_change = round((predicted_value - offer_value) / offer_value*100)
-first_string = 'Predicted price is {} below the offerred price.'.format(str(abs(pct_change))+"%")
+first_string = 'Predicted price ({}) is {} below offer price.'.format("${:,.0f}".format(predicted_value),str(abs(pct_change))+"%")
 prediction_text = first_string+'<br>This is an average offer.'
 # x axis selection
 x_axis = 'MSRPChart'
@@ -152,16 +152,16 @@ def predict():
     
     # get responses
     int_features = [x for x in request.form.values()]
-    
+
     # values
     # numeric
-    msrp = [int(int_features[0])]
-    days_on_lot = [int(int_features[1])]
-    vf_DisplacementCC = [int(int_features[2])]
-    vf_ModelYear = [int(int_features[4])]
-    mileage = [int(int_features[5])]
-    isNew = int_features[3]
-    brand = int_features[6]
+    msrp = [int(int_features[6])]
+    days_on_lot = [int(int_features[5])]
+    vf_DisplacementCC = [int(int_features[4])]
+    vf_ModelYear = [int(int_features[1])]
+    mileage = [int(int_features[3])]
+    isNew = int_features[0]
+    brand = int_features[2]
    # store
     vals = {'msrp':msrp,'days_on_lot':days_on_lot,'mileage':mileage,'vf_DisplacementCC':vf_DisplacementCC,'vf_ModelYear':vf_ModelYear}
     # check condition
@@ -183,27 +183,27 @@ def predict():
 
     # Create X & Y Values for Viz
     if (int_features[10] == 'MSRPChart'):
-        x_value = int(int_features[0])
-        x = list(range(15000,60000,1000))
+        x_value = int(int_features[6])
+        x = list(range(15000,80000,1000))
         mid = []
-        for msrp in range(15000,60000,1000):
+        for msrp in range(15000,80000,1000):
             vals['msrp'] = [msrp]
             df = pd.DataFrame.from_dict(vals)
             # Predict
             pred = round(loaded_model.predict(df)[0])
             mid.append(pred)
     elif (int_features[10] == "DaysChart"):
-        x_value = int(int_features[1])
-        x = list(range(0,365,5))
+        x_value = int(int_features[5])
+        x = list(range(0,366,5))
         mid = []
-        for days in range(0,365,5):
+        for days in range(0,366,5):
             vals['days_on_lot'] = [days]
             df = pd.DataFrame.from_dict(vals)
             # Predict
             pred = round(loaded_model.predict(df)[0])
             mid.append(pred)
     elif (int_features[10] == "EngineChart"):
-        x_value = int(int_features[2])
+        x_value = int(int_features[4])
         x = list(range(1000,7000,100))
         mid = []
         for engine in range(1000,7000,100):
@@ -213,7 +213,7 @@ def predict():
             pred = round(loaded_model.predict(df)[0])
             mid.append(pred)
     elif (int_features[10] == 'YearChart'):
-        x_value = int(int_features[4])
+        x_value = int(int_features[1])
         x = list(range(2000,2024,1))
         mid = []
         for year in range(2000,2024,1):
@@ -223,7 +223,7 @@ def predict():
             pred = round(loaded_model.predict(df)[0])
             mid.append(pred)
     else:
-        x_value = int(int_features[5])
+        x_value = int(int_features[3])
         x = list(range(0,150000,1000))
         mid = []
         for mileage in range(0,150000,1000):
@@ -234,14 +234,14 @@ def predict():
             mid.append(pred)
 
     # Create Upper and Lower Bounds
-    if (int_features[8] == 'Conservative'):
+    if (int_features[9] == 'Conservative'):
         z = 1.28
         upper = [val + z * sd for val in mid]
         lower = [val - z * sd for val in mid]
         # point prediciton
         upper_point = predicted_value + z * sd
         lower_point = predicted_value - z * sd
-    elif (int_features[8] == 'Moderate'):
+    elif (int_features[9] == 'Moderate'):
         z = 1.645
         upper = [val + z * sd for val in mid]
         lower = [val - z * sd for val in mid]   
@@ -289,58 +289,58 @@ def predict():
     lower = [val if val > 0 else 0 for val in lower]
 
     # get pct change for final string
-    pct_change = round((predicted_value - int(int_features[7])) / int(int_features[7])*100)
+    pct_change = round((predicted_value - int(int_features[8])) / int(int_features[8])*100)
     if predicted_value > offer_value:
-        first_string = 'Predicted price is {} above the offerred price.'.format(str(pct_change)+"%")
+        first_string = 'Predicted price ({}) is {} above offer price.'.format("${:,.0f}".format(predicted_value),str(pct_change)+"%")
     elif predicted_value < offer_value:
-        first_string = 'Predicted price is {} below the offerred price.'.format(str(abs(pct_change))+"%")
+        first_string = 'Predicted price ({}) is {} below offer price.'.format("${:,.0f}".format(predicted_value),str(abs(pct_change))+"%")
 
     # Prediction Text
-    if int_features[9] == 'Buy':
-        if int(int_features[7]) > upper_point:
+    if int_features[7] == 'Buy':
+        if int(int_features[8]) > upper_point:
             prediction_text = first_string+'<br>This is a bad offer.'
-        elif int(int_features[7]) < lower_point:
+        elif int(int_features[8]) < lower_point:
             prediction_text = first_string+'<br>This is a good offer.'
         else:
             prediction_text = first_string+'<br>This is an average offer.'
     else:
-        if int(int_features[7]) < lower_point:
+        if int(int_features[8]) < lower_point:
             prediction_text = first_string+'<br>This is a bad offer.'
-        elif int(int_features[7]) > upper_point:
+        elif int(int_features[8]) > upper_point:
             prediction_text = first_string+'<br>This is a good offer.'
         else:
             prediction_text = first_string+'<br>This is an average offer.'
 
     # Get values
     if request.method == 'POST':
-        # 0
+
         selected_value_msrp = request.form['MSRP']
         session['selected_value_msrp'] = selected_value_msrp
-        # 1
+  
         selected_value_days = request.form['Days']
         session['selected_value_days'] = selected_value_days
-        # 2
+
         selected_value_engine = request.form['Engine']
         session['selected_value_engine'] = selected_value_engine
-        # 3
+
         selected_value_new = request.form['New']
         session['selected_value_new'] = selected_value_new
-        # 4
+
         selected_value_year = request.form['Year']
         session['selected_value_year'] = selected_value_year
-        # 5
+
         selected_value_mileage = request.form['Mileage']
         session['selected_value_mileage'] = selected_value_mileage
-        # 6
+
         selected_value_make = request.form['Make']
         session['selected_value_make'] = selected_value_make          
-        # 7
+
         selected_value_offer = request.form['Offer Price']
         session['selected_value_offer'] = selected_value_offer    
-        # 8
+ 
         selected_value_strategy = request.form['Offer Strategy']
         session['selected_value_strategy'] = selected_value_strategy  
-        # 9
+
         selected_value_buysell = request.form['Buy Sell']
         session['selected_value_buysell'] = selected_value_buysell  
 
@@ -362,13 +362,13 @@ def results():
     
     # values
     # numeric
-    msrp = [int(int_features[0])]
-    days_on_lot = [int(int_features[1])]
-    vf_DisplacementCC = [int(int_features[2])]
-    vf_ModelYear = [int(int_features[4])]
-    mileage = [int(int_features[5])]
-    isNew = int_features[3]
-    brand = int_features[6]
+    msrp = [int(int_features[6])]
+    days_on_lot = [int(int_features[5])]
+    vf_DisplacementCC = [int(int_features[4])]
+    vf_ModelYear = [int(int_features[1])]
+    mileage = [int(int_features[3])]
+    isNew = int_features[0]
+    brand = int_features[2]
    # store
     vals = {'msrp':msrp,'days_on_lot':days_on_lot,'mileage':mileage,'vf_DisplacementCC':vf_DisplacementCC,'vf_ModelYear':vf_ModelYear}
     # check brand name
@@ -390,4 +390,4 @@ def results():
     return jsonify(predicted_value)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=os.getenv("PORT", default=5000))
+    app.run(host='127.0.0.1',port=3000, debug=True)
