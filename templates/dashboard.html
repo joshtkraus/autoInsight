@@ -3,17 +3,16 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=0.75">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AutoPrice Insight</title>
-  <link rel="stylesheet" href="https://pyscript.net/releases/2022.12.1/pyscript.css" />
-  <script defer src="https://pyscript.net/releases/2022.12.1/pyscript.js"></script>
+
   <script src="https://d3js.org/d3.v6.min.js"></script>
 
   <style>
     .main-header {
-        background-color: #007BFF;
+        background-color: #3c5678;
         color: #fff;
-        padding: 10px 20px; 
+        padding: 1% 2%; 
         text-align: center; 
         display: flex;
         align-items: center;
@@ -26,7 +25,7 @@
     }
 
     .title {
-        font-size: 24px; 
+        font-size: 1.2vw; 
         margin-top: 0;
         text-align: right;
     }
@@ -49,16 +48,23 @@
 
     .form-container {
       flex: 1;
-      padding: 20px;
+      padding: 1.3vw;
       background-color: #f2f1ef;
-      border-radius: 5px;
+      border-radius: 0.1vw;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      width: 20%;
+      width: 16%;
     }
+
+    h2{
+      font-size: 1.1vw;
+    }
+
+
 
     .form-container label {
       font-weight: bold;
       text-align: left;
+      font-size: 0.9vw;
     }
 
     .form-container input[type="range"],
@@ -69,6 +75,7 @@
 
     .form-container .range-value {
       text-align: left;
+      font-size: 0.9vw;
     }
 
     .form-container .button-container {
@@ -77,7 +84,7 @@
     }
 
     .form-container button {
-      background-color: #007BFF;
+      background-color: #3c5678;
       color: #fff;
       border: none;
       padding: 10px 20px;
@@ -87,7 +94,7 @@
     }
 
     .form-container button:hover {
-      background-color: #0056b3;
+      background-color: #223c5f;
     }
 
     .result-container {
@@ -97,6 +104,7 @@
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       text-align: center;
+      width: 68%;
     }
 
     .toggle-container {
@@ -117,7 +125,7 @@
     }
 
     input[type="radio"]:checked + label {
-        background-color: #007BFF; 
+        background-color: #3c5678; 
         color: white;
     }
 
@@ -131,6 +139,7 @@
             border-radius: 5px;
             pointer-events: none;
     }
+
   </style>
 </head>
 
@@ -146,27 +155,44 @@
         <h2>Car Features</h2>
         <form action="{{ url_for('predict')}}" method="post" id="FormMain" name="FormMain">
 
-          <label for="msrp">MSRP</label>
-          <input type="range" min="15000" max="60000" value={{ selected_value_msrp }} class="slider" id="msrp" name="MSRP">
-          <span class="range-value" id="msrp-label">{% if selected_value_msrp %}{{ "${:,.0f}".format(selected_value_msrp | int) }}{% else %}$30,000{% endif %}</span>
+          <label for="isNew" class="main-label">Condition</label>
+          <select id="new" name="New" style="font-size:0.9vw;">
+            <option value="New" {% if selected_value_new == "New" %} selected="selected" {% endif %}>New</option>
+            <option value="Used"{% if selected_value_new == "Used" %} selected="selected" {% endif %}>Used</option>
+          </select>
+          <br>
+          <br>
+
+          <label for="year">Year</label>
+          <input type="range" min="2000" max="2024" value={{ selected_value_year }} class="slider" id="year" step="1" name="Year">
+          <span class="range-value" id="year-label">{% if selected_value_year %}{{ selected_value_year }}{% else %}2012{% endif %}</span>
           <script>
-            var msrpRange = document.getElementById("msrp");
-            var msrpOutput = document.getElementById("msrp-label");
-            msrpRange.oninput = function() {
-              msrpOutput.textContent = msrpRange.value;
+            var yearRange = document.getElementById("year");
+            var yearOutput = document.getElementById("year-label");
+            yearRange.oninput = function() {
+                yearOutput.textContent = yearRange.value;
             };
           </script>
           <br>
           <br>
 
-          <label for="days_on_lot">Days For Sale</label>
-          <input type="range" min="0" max="365" value={{ selected_value_days }} class="slider" id="days" step="1" name="Days">
-          <span class="range-value" id="days-label">{% if selected_value_days %}{{ selected_value_days }}{% else %}182{% endif %}</span>
+          <label for="make">Make</label>
+          <select id="make" name="Make" style="font-size:0.9vw;">
+              {% for make in make_options %}
+              <option value="{{ make }}" {% if selected_value_make == make %}selected="selected"{% endif %}>{{ make }}</option>
+              {% endfor %}
+          </select>
+          <br>
+          <br>
+
+          <label for="mileage">Mileage</label>
+          <input type="range" min="0" max="150000" value={{ selected_value_mileage }} class="slider" id="mileage" name="Mileage">
+          <span class="range-value" id="mileage-label">{% if selected_value_mileage %}{{ "{:,.0f}".format(selected_value_mileage | int) }}{% else %}75,000{% endif %}</span>
           <script>
-            var daysRange = document.getElementById("days");
-            var daysOutput = document.getElementById("days-label");
-            daysRange.oninput = function() {
-                daysOutput.textContent = daysRange.value;
+            var mileageRange = document.getElementById("mileage");
+            var mileageOutput = document.getElementById("mileage-label");
+            mileageRange.oninput = function() {
+              mileageOutput.textContent = mileageRange.value;
             };
           </script>
           <br>
@@ -185,55 +211,44 @@
           <br>
           <br>
 
-          <label for="isNew" class="main-label">Condition</label>
-            <select id="new" name="New">
-              <option value="New" {% if selected_value_new == "New" %} selected="selected" {% endif %}>New</option>
-              <option value="Used"{% if selected_value_new == "Used" %} selected="selected" {% endif %}>Used</option>
-            </select>
-          <br>
-          <br>
-      
-          <label for="year">Year</label>
-          <input type="range" min="2000" max="2024" value={{ selected_value_year }} class="slider" id="year" step="1" name="Year">
-          <span class="range-value" id="year-label">{% if selected_value_year %}{{ selected_value_year }}{% else %}2012{% endif %}</span>
+          <label for="days_on_lot">Days For Sale</label>
+          <input type="range" min="0" max="366" value={{ selected_value_days }} class="slider" id="days" step="1" name="Days">
+          <span class="range-value" id="days-label">{% if selected_value_days %}{{ selected_value_days }}{% else %}183{% endif %}</span>
           <script>
-            var yearRange = document.getElementById("year");
-            var yearOutput = document.getElementById("year-label");
-            yearRange.oninput = function() {
-                yearOutput.textContent = yearRange.value;
+            var daysRange = document.getElementById("days");
+            var daysOutput = document.getElementById("days-label");
+            daysRange.oninput = function() {
+                daysOutput.textContent = daysRange.value;
             };
           </script>
           <br>
           <br>
 
-          <label for="mileage">Mileage</label>
-          <input type="range" min="0" max="150000" value={{ selected_value_mileage }} class="slider" id="mileage" name="Mileage">
-          <span class="range-value" id="mileage-label">{% if selected_value_mileage %}{{ "{:,.0f}".format(selected_value_mileage | int) }}{% else %}75,000{% endif %}</span>
+          <label for="msrp">Original MSRP</label>
+          <input type="range" min="15000" max="80000" value={{ selected_value_msrp }} class="slider" id="msrp" name="MSRP">
+          <span class="range-value" id="msrp-label">{% if selected_value_msrp %}{{ "${:,.0f}".format(selected_value_msrp | int) }}{% else %}$47,500{% endif %}</span>
           <script>
-            var mileageRange = document.getElementById("mileage");
-            var mileageOutput = document.getElementById("mileage-label");
-            mileageRange.oninput = function() {
-              mileageOutput.textContent = mileageRange.value;
+            var msrpRange = document.getElementById("msrp");
+            var msrpOutput = document.getElementById("msrp-label");
+            msrpRange.oninput = function() {
+              msrpOutput.textContent = msrpRange.value;
             };
           </script>
-          <br>
-          <br>
-
-          <label for="make">Make:</label>
-          <select id="make" name="Make">
-              {% for make in make_options %}
-              <option value="{{ make }}" {% if selected_value_make == make %}selected="selected"{% endif %}>{{ make }}</option>
-              {% endfor %}
-          </select>
-          <br>
-          <br>
         </div>
+
         <div class="form-container">
           <h2>Offer Details</h2>
+            <label for="buy_sell" class="main-label">Buying or Selling?</label>
+            <select id="buy_sell" name="Buy Sell" style="font-size:0.9vw;">
+              <option value="Buy" {% if selected_value_buysell == "Buy" %} selected="selected" {% endif %}>Buy</option>
+              <option value="Sell"{% if selected_value_buysell == "Sell" %} selected="selected" {% endif %}>Sell</option>
+            </select>
+            <br>
+            <br>
 
             <label for="offer-price">Offer Price</label>
-            <input type="range" min="0" max="60000" value= {{ selected_value_offer }} class="slider" id="offer-price" name="Offer Price">
-            <span class="range-value" for="offer-price" id="offer-price-label">{% if selected_value_offer %}{{ "${:,.0f}".format(selected_value_offer | int) }}{% else %}$30,000{% endif %}</span>
+            <input type="range" min="0" max="80000" value= {{ selected_value_offer }} class="slider" id="offer-price" name="Offer Price">
+            <span class="range-value" for="offer-price" id="offer-price-label">{% if selected_value_offer %}{{ "${:,.0f}".format(selected_value_offer | int) }}{% else %}$40,000{% endif %}</span>
             <script>
               var offerRange = document.getElementById("offer-price");
               var offerOutput = document.getElementById("offer-price-label");
@@ -246,24 +261,17 @@
             <br>
 
             <label for="offerStrat" class="main-label">Offer Analysis Strategy</label>
-              <select id="offerStrat" name="Offer Strategy">
+              <select id="offerStrat" name="Offer Strategy" style="font-size:0.9vw;">
                 <option value="Agressive" {% if selected_value_strategy == "Agressive" %} selected="selected" {% endif %}>Agressive</option>
                 <option value="Moderate" {% if selected_value_strategy == "Moderate" %} selected="selected" {% endif %}>Moderate</option>
                 <option value="Conservative"{% if selected_value_strategy == "Conservative" %} selected="selected" {% endif %}>Conservative</option>
             </select>
-            <br>
-            <br>
-
-            <label for="buy_sell" class="main-label">Buying or Selling?</label>
-            <select id="buy_sell" name="Buy Sell">
-              <option value="Buy" {% if selected_value_buysell == "Buy" %} selected="selected" {% endif %}>Buy</option>
-              <option value="Sell"{% if selected_value_buysell == "Sell" %} selected="selected" {% endif %}>Sell</option>
-            </select>
 
             <input type="hidden" name="hidden_data" value="MSRPChart" id="hidden_data">
-            
+            <br>
+            <br>
             <div class="button-container">
-              <button type="submit" id="btn_submit">Click to Analyze Price</button>
+              <button type="submit" id="btn_submit" style="font-size:1em;">Analyze Price</button>
             </div>
           </div>
       </form>
@@ -273,8 +281,9 @@
         <h2>Offer Details</h2>
         {{ prediction_text | safe}}
       </div>
+
       <div id="chart"></div>
-      <div class="toggle-container">
+      <div class="toggle-container" style="font-size:0.9vw;">
         <h4>Select X-Axis Variable: </h4>
         <input type="radio" id="value1" name="toggle" value="MSRPChart" {% if x_axis == "MSRPChart" %} checked="checked" {% endif %}>
         <label for="value1">MSRP</label>
@@ -292,11 +301,14 @@
 
     <script>
       function createChart(x, mid, upper, lower, x_value, predicted_value, offer_value, x_axis) {
+          var screenWidth = window.innerWidth;
+          var screenHeight = window.innerHeight;
+
           d3.select('#chart').selectAll('*').remove();  // Clear existing chart
 
-          var margin = { top: 20, right: 30, bottom: 60, left: 75 },
-              width = 1200 - margin.left - margin.right,
-              height = 600 - margin.top - margin.bottom;
+          var margin = { top: 20, right: 0, bottom: 60, left: 75 },
+              width = screenWidth/1.7 - margin.left - margin.right,
+              height = screenHeight/1.7 - margin.top - margin.bottom;
 
           var svg = d3.select('#chart')
               .append('svg')
@@ -486,64 +498,66 @@
             }
 
           // Add legend
+          // Add legend
           var legendBackground = svg.append('rect')
-                .attr('x', 950)
-                .attr('y', 435)
-                .attr('width', 140)
-                .attr('height', 80)
-                .attr('fill', '#f2f1ef')
-                .style('filter', 'drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.1))');
+              .attr('x', width - 145)  // Adjust x-coordinate based on the width of the graph
+              .attr('y', height - 85)  // Adjust y-coordinate based on the height of the graph
+              .attr('width', 140)
+              .attr('height', 80)
+              .attr('fill', '#f2f1ef')
+              .style('filter', 'drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.1))');
+
           var legend = svg.append('g')
-              .attr('transform', 'translate(1050, 445)')
+              .attr('transform', 'translate(' + (width - 140 + 10) + ',' + (height - 80 + 10) + ')')  // Adjust the transform attribute
               .attr('font-family', 'sans-serif')
               .attr('font-size', 10);
           legend.append('text')
-              .attr('y', 0)
-              .attr('x', 0)
+              .attr('y', -5)
+              .attr('x', 80)
               .attr('dy', '0.32em')
               .attr('text-anchor', 'end')
               .text('Predicted Mean');
           legend.append('line')
-              .attr('x1', 5)
-              .attr('y1', 0)
-              .attr('x2', 15)
-              .attr('y2', 0)
+              .attr('x1', 85)
+              .attr('y1', -5)
+              .attr('x2', 95)
+              .attr('y2', -5)
               .attr('stroke', 'red')
               .attr('stroke-width', 2);
           legend.append('text')
-              .attr('y', 20)
-              .attr('x', 0)
+              .attr('y', 15)
+              .attr('x', 80)
               .attr('dy', '0.32em')
               .attr('text-anchor', 'end')
               .text('Prediction Interval');
           legend.append('line')
-              .attr('x1', 5)
-              .attr('y1', 20)
-              .attr('x2', 15)
-              .attr('y2', 20)
+              .attr('x1', 85)
+              .attr('y1', 15)
+              .attr('x2', 95)
+              .attr('y2', 15)
               .attr('stroke', 'blue')
               .attr('stroke-width', 2);
           legend.append('text')
-              .attr('y', 40)
-              .attr('x', 0)
+              .attr('y', 35)
+              .attr('x', 80)
               .attr('dy', '0.32em')
               .attr('text-anchor', 'end')
               .text('Predicted Price');
           legend.append('circle')
-              .attr('cx', 10)
-              .attr('cy', 40)
+              .attr('cx', 90)
+              .attr('cy', 35)
               .attr('r', 5)
               .attr('fill', 'red')
               .attr('stroke', 'black');
           legend.append('text')
-              .attr('y', 60)
-              .attr('x', 0)
+              .attr('y', 55)
+              .attr('x', 80)
               .attr('dy', '0.32em')
               .attr('text-anchor', 'end')
               .text('Offer Price');
           legend.append('circle')
-              .attr('cx', 10)
-              .attr('cy', 60)
+              .attr('cx', 90)
+              .attr('cy', 55)
               .attr('r', 5)
               .attr('fill', 'orange')
               .attr('stroke', 'black');
