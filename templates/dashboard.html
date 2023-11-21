@@ -140,6 +140,21 @@
             pointer-events: none;
     }
 
+    [data-tooltip]:hover:after {
+        content: attr(data-tooltip);
+        display: block;
+        position: fixed;
+        background: rgba(255, 255, 255, 0.9);;
+        color: #333;
+        padding: 5px;
+        border-radius: 5px;
+        margin-top: -30px; 
+        margin-left: 80px; 
+        z-index: 1;
+        font-weight: normal;
+        white-space: pre-line;
+    }
+
   </style>
 </head>
 
@@ -155,7 +170,7 @@
         <h2>Car Features</h2>
         <form action="{{ url_for('predict')}}" method="post" id="FormMain" name="FormMain">
 
-          <label for="isNew" class="main-label">Condition</label>
+          <label for="isNew" class="main-label" data-tooltip="New or Used?">Condition</label>
           <select id="new" name="New" style="font-size:0.9vw;">
             <option value="New" {% if selected_value_new == "New" %} selected="selected" {% endif %}>New</option>
             <option value="Used"{% if selected_value_new == "Used" %} selected="selected" {% endif %}>Used</option>
@@ -163,7 +178,7 @@
           <br>
           <br>
 
-          <label for="year">Year</label>
+          <label for="year" data-tooltip="Model Year">Year</label>
           <input type="range" min="2000" max="2024" value={{ selected_value_year }} class="slider" id="year" step="1" name="Year">
           <span class="range-value" id="year-label">{% if selected_value_year %}{{ selected_value_year }}{% else %}2012{% endif %}</span>
           <script>
@@ -176,7 +191,7 @@
           <br>
           <br>
 
-          <label for="make">Make</label>
+          <label for="make" data-tooltip="Vehicle Brand">Make</label>
           <select id="make" name="Make" style="font-size:0.9vw;">
               {% for make in make_options %}
               <option value="{{ make }}" {% if selected_value_make == make %}selected="selected"{% endif %}>{{ make }}</option>
@@ -185,7 +200,7 @@
           <br>
           <br>
 
-          <label for="mileage">Mileage</label>
+          <label for="mileage" data-tooltip="Current Mileage">Mileage</label>
           <input type="range" min="0" max="150000" value={{ selected_value_mileage }} class="slider" id="mileage" name="Mileage">
           <span class="range-value" id="mileage-label">{% if selected_value_mileage %}{{ "{:,.0f}".format(selected_value_mileage | int) }}{% else %}75,000{% endif %}</span>
           <script>
@@ -198,7 +213,7 @@
           <br>
           <br>
 
-          <label for="engine_displacement">Engine Displacement (CC)</label>
+          <label for="engine_displacement" data-tooltip="Engine Displacement in Cubic Centimeters &#10; Convert Litres to CC = L x 1000">Engine Displacement (CC)</label>
           <input type="range" min="1000" max="7000" value={{ selected_value_engine }} class="slider" id="engine" step="100" name="Engine">
           <span class="range-value" id="engine-label">{% if selected_value_engine %}{{ "{:,.0f}".format(selected_value_engine | int) }}{% else %}4,000{% endif %}</span>
           <script>
@@ -211,7 +226,7 @@
           <br>
           <br>
 
-          <label for="days_on_lot">Days For Sale</label>
+          <label for="days_on_lot" data-tooltip="# of Days for Sale">Days For Sale</label>
           <input type="range" min="0" max="366" value={{ selected_value_days }} class="slider" id="days" step="1" name="Days">
           <span class="range-value" id="days-label">{% if selected_value_days %}{{ selected_value_days }}{% else %}183{% endif %}</span>
           <script>
@@ -224,7 +239,7 @@
           <br>
           <br>
 
-          <label for="msrp">Original MSRP</label>
+          <label for="msrp" data-tooltip="MSRP in Year Made">Original MSRP</label>
           <input type="range" min="15000" max="80000" value={{ selected_value_msrp }} class="slider" id="msrp" name="MSRP">
           <span class="range-value" id="msrp-label">{% if selected_value_msrp %}{{ "${:,.0f}".format(selected_value_msrp | int) }}{% else %}$47,500{% endif %}</span>
           <script>
@@ -238,7 +253,7 @@
 
         <div class="form-container">
           <h2>Offer Details</h2>
-            <label for="buy_sell" class="main-label">Buying or Selling?</label>
+            <label for="buy_sell" class="main-label" data-tooltip="Are you Buying or Selling?">Buying or Selling?</label>
             <select id="buy_sell" name="Buy Sell" style="font-size:0.9vw;">
               <option value="Buy" {% if selected_value_buysell == "Buy" %} selected="selected" {% endif %}>Buy</option>
               <option value="Sell"{% if selected_value_buysell == "Sell" %} selected="selected" {% endif %}>Sell</option>
@@ -246,7 +261,7 @@
             <br>
             <br>
 
-            <label for="offer-price">Offer Price</label>
+            <label for="offer-price" data-tooltip="Offer Price Recieved">Offer Price</label>
             <input type="range" min="0" max="80000" value= {{ selected_value_offer }} class="slider" id="offer-price" name="Offer Price">
             <span class="range-value" for="offer-price" id="offer-price-label">{% if selected_value_offer %}{{ "${:,.0f}".format(selected_value_offer | int) }}{% else %}$40,000{% endif %}</span>
             <script>
@@ -260,7 +275,8 @@
             <br>
             <br>
 
-            <label for="offerStrat" class="main-label">Offer Analysis Strategy</label>
+            <label for="offerStrat" class="main-label" data-tooltip="Agressive: Wider Price Intervals (harder to find a good deal) &#10;
+              Conservative: Narrower Price Intervals (easier to find a good deal)">Offer Analysis Strategy</label>
               <select id="offerStrat" name="Offer Strategy" style="font-size:0.9vw;">
                 <option value="Agressive" {% if selected_value_strategy == "Agressive" %} selected="selected" {% endif %}>Agressive</option>
                 <option value="Moderate" {% if selected_value_strategy == "Moderate" %} selected="selected" {% endif %}>Moderate</option>
@@ -279,7 +295,8 @@
     <div class="result-container">      
       <div style="margin: auto; width: 50%;">
         <h2>Offer Details</h2>
-        {{ prediction_text | safe}}
+        <div id="offer-output">
+        </div>
       </div>
 
       <div id="chart"></div>
@@ -300,11 +317,74 @@
     </div>
 
     <script>
-      function createChart(x, mid, upper, lower, x_value, predicted_value, offer_value, x_axis) {
+      // Text formatting
+      function formatNumberWithCommas(number) {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+      // Get the select element by its ID
+      var offerDropdown = document.getElementById("offer-price");
+      var offer_value = offerDropdown.value;
+
+      function getText(offer_value){
+        var pct_change = Math.round(({{predicted_value}} - offer_value) / offer_value*100)
+        var pred_formatted = "$" + formatNumberWithCommas({{ predicted_value }})
+
+        if({{predicted_value | int}}>offer_value){
+          var first_string = "Predicted Price (" + pred_formatted + ") is " + pct_change + "% above offer price."
+        } else if ({{predicted_value}}<offer_value){
+          var first_string = "Predicted Price (" + pred_formatted + ") is " + Math.abs(pct_change) + "% below offer price."
+        } else {
+          var first_string = "Predicted Price (" + pred_formatted + ") is equal to offer price."
+        }
+
+        // Get the select element by its ID
+        var buySellDropdown = document.getElementById("buy_sell");
+        // Get the selected value
+        var buySellValue = buySellDropdown.value;
+
+        if (buySellValue === "Buy"){
+            if (offer_value > {{ upper_point | int}}){
+              second_string = "<br>This is a bad offer."
+            }else if (offer_value < {{ lower_point | int}}){
+                second_string = "<br>This is a good offer."
+            }else{
+                second_string = "<br>This is an average offer."
+            }
+        }else{
+            if ({{ offer_value | int }} < {{ upper_point | int}}){
+              second_string = "<br>This is a bad offer."
+            }else if ({{ offer_value | int }} > {{ lower_point | int}}){
+                second_string = "<br>This is a good offer."
+            }else{
+                second_string = "<br>This is an average offer."
+            }
+        }
+        document.getElementById("offer-output").innerHTML=first_string+second_string;
+      }
+
+      getText(offer_value)
+
+      var offerRange = document.getElementById("offer-price");
+      offerRange.oninput = function() {
+        offer_value = offerRange.value;
+        getText(offer_value);
+      };
+
+    </script>
+
+    <script>
+      // Function to handle window resize
+      function handleResize() {
           var screenWidth = window.innerWidth;
           var screenHeight = window.innerHeight;
+        }
+    </script>
 
-          d3.select('#chart').selectAll('*').remove();  // Clear existing chart
+    <script>
+      function createChart(x, mid, upper, lower, x_value, predicted_value, offer_value, x_axis, width, height) {
+        
+        d3.select('#chart').selectAll('*').remove();  // Clear existing chart
 
           var margin = { top: 20, right: 0, bottom: 60, left: 75 },
               width = screenWidth/1.7 - margin.left - margin.right,
@@ -427,15 +507,57 @@
               .attr('stroke', 'black')
               .on('mouseover', handlePredictedMouseOver)
               .on('mouseout', handlePredictedMouseOut);
-          // Add offer value point
+          
+          // Add offer value point with drag behavior
           var offerCircle = svg.append('circle')
               .attr('cx', xScale(x_value))
               .attr('cy', yScale(offer_value))
               .attr('r', 5)
               .attr('fill', 'orange')
               .attr('stroke', 'black')
+              .call(d3.drag()
+                  .on('start', dragStarted)
+                  .on('drag', dragged)
+                  .on('end', dragEnded))
               .on('mouseover', handleOfferMouseOver)
               .on('mouseout', handleOfferMouseOut);
+
+          // Drag handlers
+          function dragStarted(event) {
+              // Stop propagation to prevent interference with other elements
+              event.sourceEvent.stopPropagation();
+          }
+
+          function dragged(event) {
+              // Get the y-value from the dragged position
+              var newY = yScale.invert(event.y);
+
+              // Apply constraints to the dragged position
+              newY = Math.max(yScale.domain()[0], Math.min(yScale.domain()[1], newY));
+
+              // Update the offerCircle's position
+              offerCircle.attr('cy', yScale(newY));
+
+              // Update the hidden input value and offerPriceLabel
+              updateOfferValue(newY);
+
+              getText(newY);
+          }
+
+          function dragEnded(event) {
+              // Handle any additional actions after dragging ends (if needed)
+          }
+
+          // Function to update the hidden input value and offerPriceLabel
+          function updateOfferValue(newY) {
+              var formattedValue = d3.format('$,.0f')(newY);
+              offerPriceSlider.value = newY;
+              offerPriceLabel.textContent = formattedValue;
+              offer_value = newY
+              tooltip.html('Offer Value: ' + formattedValue + "<br>Click & Drag to Change Value")
+                    .style('left', (event.pageX + 5) + 'px')
+                    .style('top', (event.pageY - 28) + 'px');
+          }
 
           // Tooltip
           var tooltip = d3.select('body').append('div')
@@ -466,7 +588,7 @@
                   .duration(200)
                   .style('opacity', .9);
 
-              tooltip.html('Offer Value: ' + formattedOfferYValue)
+              tooltip.html('Offer Value: ' + formattedOfferYValue + "<br>Click & Drag to Change Value")
                   .style('left', (event.pageX + 5) + 'px')
                   .style('top', (event.pageY - 28) + 'px');
 
@@ -643,23 +765,24 @@
           
       }
 
+      var screenWidth = window.innerWidth;
+      var screenHeight = window.innerHeight;
+
       createChart({{ x|tojson|safe }}, {{ mid|tojson|safe }}, 
       {{ upper|tojson|safe }}, {{ lower|tojson|safe }},
       {{ x_value|tojson|safe }},{{ predicted_value|tojson|safe }},{{ offer_value|tojson|safe }},
-      {{ x_axis|tojson|safe }});
+      {{ x_axis|tojson|safe }}, screenWidth, screenHeight);
 
-      document.getElementById('updateGraph').addEventListener('click', function () {
-          // You can make an AJAX request to update the data dynamically from the server.
-          fetch('/update_graph', {
-              method: 'POST',
-          })
-          .then(response => response.json())
-          .then(data => {
-              createChart(data.x, data.mid, data.upper, data.lower, 
-              data.x_value, data.predicted_value, data.offer_value,
-              data.x_axis);
-          });
-      });
+      window.onresize = function(event){
+        screenWidth = document.documentElement.clientWidth;
+        screenHeight = document.documentElement.clientHeight;
+
+        createChart({{ x|tojson|safe }}, {{ mid|tojson|safe }}, 
+      {{ upper|tojson|safe }}, {{ lower|tojson|safe }},
+      {{ x_value|tojson|safe }},{{ predicted_value|tojson|safe }},{{ offer_value|tojson|safe }},
+      {{ x_axis|tojson|safe }}, screenWidth, screenHeight);
+    };  
+
   </script>
 
     <script>
@@ -676,11 +799,6 @@
         const mileageLabel = document.getElementById("mileage-label");
         const offerPriceSlider = document.getElementById("offer-price");
         const offerPriceLabel = document.getElementById("offer-price-label");
-
-        // Text formatting
-        function formatNumberWithCommas(number) {
-        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
 
         // Update the label text when the slider value changes
         msrpSlider.addEventListener("input", function () {
@@ -724,6 +842,7 @@
         });
       });
     </script>
+
   </div>
 </body>
 
