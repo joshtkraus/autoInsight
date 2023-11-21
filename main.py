@@ -124,6 +124,10 @@ sd = 2473.4417250378865
 z = 1.96
 upper = [val + z * sd for val in mid]
 lower = [val - z * sd for val in mid]
+# point prediciton
+idx = x.index(x[min(range(len(x)), key = lambda i: abs(x[i]-x_value))])
+upper_point = upper[idx]
+lower_point = lower[idx]
 # smoothing
 x=signal.savgol_filter(x, 10, 1).tolist()
 mid=signal.savgol_filter(mid, 10, 1).tolist()
@@ -131,10 +135,7 @@ upper=signal.savgol_filter(upper, 10, 1,).tolist()
 lower=signal.savgol_filter(lower, 10, 1).tolist()
 # offer 
 offer_value=40000
-# get pct change for final string
-pct_change = round((predicted_value - offer_value) / offer_value*100)
-first_string = 'Predicted price ({}) is {} below offer price.'.format("${:,.0f}".format(predicted_value),str(abs(pct_change))+"%")
-prediction_text = first_string+'<br>This is an average offer.'
+
 # x axis selection
 x_axis = 'MSRPChart'
 
@@ -145,7 +146,7 @@ def home():
                            make_options=make_options,
                             x=x, mid=mid, upper=upper, lower=lower,
                           x_value = x_value, predicted_value=predicted_value, offer_value=offer_value,
-                           prediction_text=prediction_text, x_axis = x_axis)
+                           upper_point=upper_point, lower_point=lower_point, x_axis = x_axis)
 
 @app.route('/predict',methods=['POST'])
 def predict():
@@ -239,22 +240,25 @@ def predict():
         upper = [val + z * sd for val in mid]
         lower = [val - z * sd for val in mid]
         # point prediciton
-        upper_point = predicted_value + z * sd
-        lower_point = predicted_value - z * sd
+        idx = x.index(x_value)
+        upper_point = upper[idx]
+        lower_point = lower[idx]
     elif (int_features[9] == 'Moderate'):
         z = 1.645
         upper = [val + z * sd for val in mid]
         lower = [val - z * sd for val in mid]   
         # point prediciton
-        upper_point = predicted_value + z * sd
-        lower_point = predicted_value - z * sd
+        idx = x.index(x_value)
+        upper_point = upper[idx]
+        lower_point = lower[idx]
     else:
         z = 1.96
         upper = [val + z * sd for val in mid]
         lower = [val - z * sd for val in mid]
         # point prediciton
-        upper_point = predicted_value + z * sd
-        lower_point = predicted_value - z * sd
+        idx = x.index(x[min(range(len(x)), key = lambda i: abs(x[i]-x_value))])
+        upper_point = upper[idx]
+        lower_point = lower[idx]
 
     # smoothing
     if (int_features[10] == 'MSRPChart'):
@@ -287,29 +291,6 @@ def predict():
     mid = [val if val > 0 else 0 for val in mid]
     upper = [val if val > 0 else 0 for val in upper]
     lower = [val if val > 0 else 0 for val in lower]
-
-    # get pct change for final string
-    pct_change = round((predicted_value - int(int_features[8])) / int(int_features[8])*100)
-    if predicted_value > offer_value:
-        first_string = 'Predicted price ({}) is {} above offer price.'.format("${:,.0f}".format(predicted_value),str(pct_change)+"%")
-    elif predicted_value < offer_value:
-        first_string = 'Predicted price ({}) is {} below offer price.'.format("${:,.0f}".format(predicted_value),str(abs(pct_change))+"%")
-
-    # Prediction Text
-    if int_features[7] == 'Buy':
-        if int(int_features[8]) > upper_point:
-            prediction_text = first_string+'<br>This is a bad offer.'
-        elif int(int_features[8]) < lower_point:
-            prediction_text = first_string+'<br>This is a good offer.'
-        else:
-            prediction_text = first_string+'<br>This is an average offer.'
-    else:
-        if int(int_features[8]) < lower_point:
-            prediction_text = first_string+'<br>This is a bad offer.'
-        elif int(int_features[8]) > upper_point:
-            prediction_text = first_string+'<br>This is a good offer.'
-        else:
-            prediction_text = first_string+'<br>This is an average offer.'
 
     # Get values
     if request.method == 'POST':
@@ -348,7 +329,7 @@ def predict():
                             make_options=make_options,
                           x=x, mid=mid, upper=upper, lower=lower,
                           x_value = x_value, predicted_value=predicted_value, offer_value=selected_value_offer,
-                           prediction_text=prediction_text, x_axis = str(int_features[10]),
+                           upper_point=upper_point, lower_point=lower_point, x_axis = str(int_features[10]),
                            selected_value_year=selected_value_year, selected_value_mileage = selected_value_mileage, selected_value_msrp = selected_value_msrp, \
                            selected_value_make = selected_value_make, selected_value_engine = selected_value_engine, selected_value_offer = selected_value_offer, \
                            selected_value_days = selected_value_days, selected_value_new = selected_value_new, \
