@@ -240,7 +240,7 @@ def predict():
         upper = [val + z * sd for val in mid]
         lower = [val - z * sd for val in mid]
         # point prediciton
-        idx = x.index(x_value)
+        idx = x.index(x[min(range(len(x)), key = lambda i: abs(x[i]-x_value))])
         upper_point = upper[idx]
         lower_point = lower[idx]
     elif (int_features[9] == 'Moderate'):
@@ -248,7 +248,7 @@ def predict():
         upper = [val + z * sd for val in mid]
         lower = [val - z * sd for val in mid]   
         # point prediciton
-        idx = x.index(x_value)
+        idx = x.index(x[min(range(len(x)), key = lambda i: abs(x[i]-x_value))])
         upper_point = upper[idx]
         lower_point = lower[idx]
     else:
